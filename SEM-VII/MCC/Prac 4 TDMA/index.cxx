@@ -32,7 +32,7 @@ class TDMA
 
    VecT                    slotTimes{};
    VecT                    userTimesToTransmitLeft{5, 5, 5, 10, 12, 13};
-   static _CONSTEVAL TimeT threshold = 10;
+   static constexpr TimeT  threshold = 10;
 
  public:
    constexpr bool HasNext()
