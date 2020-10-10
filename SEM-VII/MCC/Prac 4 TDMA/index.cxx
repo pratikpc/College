@@ -1,26 +1,8 @@
 #include <algorithm>
 #include <vector>
 
-#include <ostream>
 #include <istream>
-
-namespace utils
-{
-template <typename T>
-T maxI(T &&t)
-{
-   return std::forward<T>(t);
-}
-
-template <typename T0, typename T1, typename... Ts>
-std::common_type_t<T0, T1, Ts...> maxI(T0 &&val1, T1 &&val2, Ts &&... vs)
-{
-   if (val2 > val1)
-      return maxI(val2, std::forward<Ts>(vs)...);
-   else
-      return maxI(val1, std::forward<Ts>(vs)...);
-}
-} // namespace utils
+#include <ostream>
 
 class TDMA
 {
@@ -30,21 +12,22 @@ class TDMA
    // Note that here we assume
    // Each Slot Time Index is same as User Duration Index
 
-   VecT                    slotTimes{};
-   VecT                    userTimesToTransmitLeft{5, 5, 5, 10, 12, 13};
-   static constexpr TimeT  threshold = 10;
+   VecT slotTimes{};
+   VecT userTimesToTransmitLeft{};
+
+   static constexpr TimeT threshold = 10;
 
  public:
-   constexpr bool HasNext()
+   bool HasNext() const noexcept
    {
-      auto const done = std::count_if(
+      auto const done = std::find_if(
           std::cbegin(userTimesToTransmitLeft), std::cend(userTimesToTransmitLeft),
           [](auto const timeToTransmitLeft) { return timeToTransmitLeft > 0; });
-      return done > 0;
+      return done != std::cend(userTimesToTransmitLeft);
    }
 
  public:
-   void SetSlotTimesToSameAsUserCountAndFixDuration(TimeT const fixedSlotTime)
+   void SetSlotTimesToSameAsUserCountAndFixDuration(TimeT const fixedSlotTime) noexcept
    {
       slotTimes.resize(userTimesToTransmitLeft.size());
       std::fill_n(std::begin(slotTimes), userTimesToTransmitLeft.size(), fixedSlotTime);
@@ -72,11 +55,11 @@ class TDMA
    {
       // Find Length of Loop
       // Based on Max Param by which to execute
-      auto const loopLength =
-          utils::maxI(userTimesToTransmitLeft.size(), slotTimes.size());
+      auto const loopLength = userTimesToTransmitLeft.size();
 
       TimeT       currentTransmittingTime = 0;
       std::size_t unusedSlotCount         = 0;
+
       for (std::size_t i = 0; i < loopLength; ++i)
       {
          auto &userTimeToTransmitLeft =
@@ -102,7 +85,7 @@ class TDMA
             stream << "Time Slot " << currentTransmittingTime << " to "
                    << (currentTransmittingTime + slot) << " idle" << '\n';
          }
-         currentTransmittingTime += slot + 1;
+         currentTransmittingTime += (slot + 1);
       }
    }
 };
@@ -121,17 +104,29 @@ int main()
    }
 }
 
-/* OUTPUT
+/*
+Enter Transmission Time for User (Zero to Exit) :11
+Enter Transmission Time for User (Zero to Exit) :12
+Enter Transmission Time for User (Zero to Exit) :10
+Enter Transmission Time for User (Zero to Exit) :9
+Enter Transmission Time for User (Zero to Exit) :8
+Enter Transmission Time for User (Zero to Exit) :12
+Enter Transmission Time for User (Zero to Exit) :7
+Enter Transmission Time for User (Zero to Exit) :0
 Cycle 1
 Channel 1 has not been assigned to any slot
-Channel 2 has been assigned to slot 418 to 835
-Channel 3 has been assigned to slot 836 to 1253
+Channel 2 has not been assigned to any slot
+Channel 3 has not been assigned to any slot
 Channel 4 has been assigned to slot 1254 to 1671
 Channel 5 has been assigned to slot 1672 to 2089
+Channel 6 has not been assigned to any slot
+Channel 7 has been assigned to slot 2508 to 2925
 Cycle 2
 Channel 1 has been assigned to slot 0 to 417
-Time Slot 418 to 835 idle
+Channel 2 has been assigned to slot 418 to 835
 Time Slot 836 to 1253 idle
 Time Slot 1254 to 1671 idle
 Time Slot 1672 to 2089 idle
+Channel 6 has been assigned to slot 2090 to 2507
+Time Slot 2508 to 2925 idle
 */
