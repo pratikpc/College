@@ -1,0 +1,12 @@
+clc; 
+clear all; 
+close all; 
+L=input('Desired length= '); 
+A=input('Amplitude= '); 
+omega=input('Angular frequency= '); 
+n=0:L-1;
+x=A*cos(omega*n); 
+stem(n,x);
+xlabel('n');
+ylabel('amplitude'); 
+title(['\ omega_0= ',num2str(omega)]);
